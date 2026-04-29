@@ -13,3 +13,7 @@ Thumbs.db
 # 폰트는 다운로드 스크립트로 받아옴 (저장소에는 포함 X)
 assets/fonts/*.ttf
 assets/fonts/*.otf
+
+# 디버그 결과물
+tmp-debug/
+*.tsbuildinfo

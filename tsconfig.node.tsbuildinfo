@@ -1,1 +1,0 @@
-{"root":["./vite.config.ts","./electron/ffmpeg.ts","./electron/main.ts","./electron/preload.ts","./electron/types.d.ts","./shared/types.ts"],"version":"5.9.3"}
