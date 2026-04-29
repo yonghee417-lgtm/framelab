@@ -1,0 +1,15 @@
+node_modules/
+dist/
+dist-electron/
+release/
+*.local
+.vite/
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/
+
+# 폰트는 다운로드 스크립트로 받아옴 (저장소에는 포함 X)
+assets/fonts/*.ttf
+assets/fonts/*.otf
