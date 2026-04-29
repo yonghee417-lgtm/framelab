@@ -61,6 +61,66 @@ async function ensureUserDataDir() {
   return dir;
 }
 
+let splashWindow: BrowserWindow | null = null;
+
+function getLogoPath(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'app.asar.unpacked', 'assets', 'Logo.png')
+    : path.join(process.env.APP_ROOT!, 'assets', 'Logo.png');
+}
+
+function createSplash() {
+  splashWindow = new BrowserWindow({
+    width: 420,
+    height: 360,
+    frame: false,
+    resizable: false,
+    movable: true,
+    alwaysOnTop: true,
+    show: false,
+    backgroundColor: '#0e0e10',
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+    },
+  });
+
+  const logoUrl = `file:///${getLogoPath().replace(/\\/g, '/')}`;
+  const splashHtml = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-app-region: drag; }
+  body { background: #0e0e10; color: #f5f5f7; font-family: 'Segoe UI', 'Apple SD Gothic Neo', system-ui, sans-serif; display: flex; align-items: center; justify-content: center; }
+  .wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+  .logo { width: 180px; height: 180px; object-fit: contain; animation: pulse 1.8s ease-in-out infinite; filter: drop-shadow(0 4px 24px rgba(124, 92, 255, 0.35)); }
+  .title { font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+  .title .accent { color: #7c5cff; }
+  .sub { font-size: 11px; color: #9ca3af; opacity: 0.85; }
+  .spinner { width: 28px; height: 28px; border: 2px solid rgba(255,255,255,0.12); border-top-color: #7c5cff; border-radius: 50%; animation: spin 0.9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.04); opacity: 0.92; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <img class="logo" src="${logoUrl}" onerror="this.style.display='none'" alt="FrameLab" />
+    <div class="title"><span class="accent">Frame</span>Lab</div>
+    <div class="spinner"></div>
+    <div class="sub">로딩 중...</div>
+  </div>
+</body>
+</html>`;
+
+  splashWindow.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(splashHtml));
+  splashWindow.once('ready-to-show', () => splashWindow?.show());
+  splashWindow.on('closed', () => {
+    splashWindow = null;
+  });
+}
+
 function createWindow() {
   mainWindow = new BrowserWindow({
     title: 'FrameLab',
@@ -70,6 +130,8 @@ function createWindow() {
     minHeight: 700,
     backgroundColor: '#0e0e10',
     autoHideMenuBar: true,
+    show: false, // ready-to-show 후에 표시 (splash 닫는 타이밍 동기화)
+    icon: getLogoPath(),
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       sandbox: false,
@@ -86,6 +148,13 @@ function createWindow() {
     mainWindow.loadFile(path.join(RENDERER_DIST, 'index.html'));
   }
 
+  // 메인 윈도우가 그릴 준비 끝나면 → 메인 표시 + splash 닫기
+  mainWindow.once('ready-to-show', () => {
+    mainWindow?.show();
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.close();
+    }
+  });
 }
 
 // 로컬 파일을 안전하게 미디어로 로드하기 위한 커스텀 프로토콜
@@ -139,6 +208,8 @@ function registerMediaProtocol() {
 }
 
 app.whenReady().then(async () => {
+  // 스플래시 먼저 띄워 사용자에게 즉시 피드백
+  createSplash();
   registerMediaProtocol();
   await ensureUserDataDir();
   createWindow();

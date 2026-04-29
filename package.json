@@ -49,15 +49,18 @@
     "files": [
       "dist",
       "dist-electron",
-      "assets/fonts/**/*"
+      "assets/fonts/**/*",
+      "assets/Logo.png"
     ],
     "asarUnpack": [
       "node_modules/ffmpeg-static/**",
       "node_modules/ffprobe-static/**",
-      "assets/fonts/**"
+      "assets/fonts/**",
+      "assets/Logo.png"
     ],
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "assets/Logo.png"
     },
     "nsis": {
       "oneClick": false,
@@ -71,6 +74,7 @@
         { "target": "zip", "arch": ["arm64", "x64"] }
       ],
       "category": "public.app-category.video",
+      "icon": "assets/Logo.png",
       "identity": null,
       "hardenedRuntime": false,
       "gatekeeperAssess": false
