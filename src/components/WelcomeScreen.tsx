@@ -9,6 +9,7 @@ import {
   type RecentExternalFile,
 } from '../utils/recents';
 import { ConfirmDialog } from './ConfirmDialog';
+import { BannerSlot } from './BannerSlot';
 
 // 통합 목록 항목 — 라이브러리 프로젝트 또는 외부 파일
 type RecentItem =
@@ -48,6 +49,21 @@ export function WelcomeScreen() {
     return items.sort((a, b) => b.sortTime - a.sortTime);
   }, [libraryProjects, externalRecents]);
 
+  const handleStart = () => {
+    const value = (nameInputRef.current?.value ?? '').trim();
+    const finalName = value || '새 프로젝트';
+    const dupLibrary = libraryProjects.find((p) => p.name === finalName);
+    const dupExternal = externalRecents.find((e) => e.name === finalName);
+    if (dupLibrary || dupExternal) {
+      setDuplicateError(
+        `이미 "${finalName}" 이름의 프로젝트가 있습니다. 다른 이름을 사용하거나 기존 프로젝트를 삭제해주세요.`,
+      );
+      return;
+    }
+    setDuplicateError(null);
+    createProject(finalName, preset);
+  };
+
   const handleOpenExternal = async (filePath: string) => {
     if (!window.api) return;
     const result = await window.api.openProjectFromPath(filePath);
@@ -73,9 +89,10 @@ export function WelcomeScreen() {
 
   return (
     <div className="h-full w-full flex bg-bg-base">
-      {/* 왼쪽 - 새 프로젝트 */}
-      <div className="flex-1 flex flex-col items-center justify-center p-12">
-        <div className="w-full max-w-lg">
+      {/* 왼쪽 - 새 프로젝트 + 하단 배너 */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex items-center justify-center p-12 overflow-y-auto min-h-0">
+          <div className="w-full max-w-lg">
           <h1 className="text-4xl font-bold mb-2 flex items-baseline gap-2">
             <span>
               <span className="text-accent">Frame</span>
@@ -90,20 +107,31 @@ export function WelcomeScreen() {
           <div className="space-y-6">
             <div>
               <label className="block text-sm text-text-secondary mb-2">프로젝트 이름</label>
-              <input
-                ref={nameInputRef}
-                type="text"
-                defaultValue="새 프로젝트"
-                onKeyDown={(e) => e.stopPropagation()}
-                onKeyUp={(e) => e.stopPropagation()}
-                onKeyPress={(e) => e.stopPropagation()}
-                onMouseDown={(e) => e.stopPropagation()}
-                onChange={() => duplicateError && setDuplicateError(null)}
-                spellCheck={false}
-                autoComplete="off"
-                className="input w-full"
-                placeholder="프로젝트 이름"
-              />
+              <div className="flex gap-2">
+                <input
+                  ref={nameInputRef}
+                  type="text"
+                  defaultValue="새 프로젝트"
+                  onKeyDown={(e) => {
+                    e.stopPropagation();
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleStart();
+                    }
+                  }}
+                  onKeyUp={(e) => e.stopPropagation()}
+                  onKeyPress={(e) => e.stopPropagation()}
+                  onMouseDown={(e) => e.stopPropagation()}
+                  onChange={() => duplicateError && setDuplicateError(null)}
+                  spellCheck={false}
+                  autoComplete="off"
+                  className="input flex-1 min-w-0"
+                  placeholder="프로젝트 이름"
+                />
+                <button onClick={handleStart} className="btn-primary px-5 whitespace-nowrap">
+                  ▶ 시작
+                </button>
+              </div>
               {duplicateError && (
                 <div className="mt-2 text-xs text-red-400 bg-red-500/10 border border-red-500/30 rounded p-2">
                   ⚠ {duplicateError}
@@ -160,28 +188,13 @@ export function WelcomeScreen() {
               })}
               <p className="text-xs text-text-muted mt-2">{PRESETS[preset].description}</p>
             </div>
-
-            <button
-              onClick={() => {
-                const value = (nameInputRef.current?.value ?? '').trim();
-                const finalName = value || '새 프로젝트';
-                // 중복 검사: 라이브러리 프로젝트 + 외부 파일 모두
-                const dupLibrary = libraryProjects.find((p) => p.name === finalName);
-                const dupExternal = externalRecents.find((e) => e.name === finalName);
-                if (dupLibrary || dupExternal) {
-                  setDuplicateError(
-                    `이미 "${finalName}" 이름의 프로젝트가 있습니다. 다른 이름을 사용하거나 기존 프로젝트를 삭제해주세요.`,
-                  );
-                  return;
-                }
-                setDuplicateError(null);
-                createProject(finalName, preset);
-              }}
-              className="btn-primary w-full text-base py-3"
-            >
-              프로젝트 시작
-            </button>
           </div>
+          </div>
+        </div>
+
+        {/* 메인화면 하단 배너 광고 (600×60 커스텀 슬림) */}
+        <div className="border-t border-border-subtle p-3 flex justify-center bg-bg-base/50 flex-shrink-0">
+          <BannerSlot slotId="main-bottom" width={600} height={60} label="메인화면하단배너광고" />
         </div>
       </div>
 
@@ -299,6 +312,10 @@ export function WelcomeScreen() {
         <div className="p-3 border-t border-border-subtle text-[10px] text-text-muted leading-snug">
           📚 라이브러리 자동 저장 · 📁 외부 파일 (다른 이름으로 저장)<br />
           ×로 라이브러리 영구 삭제 (확인 후) 또는 외부 파일은 목록에서만 제거
+        </div>
+        {/* 프로젝트 패널 하단 배너 광고 (300×60 커스텀 슬림) */}
+        <div className="p-3 border-t border-border-subtle flex justify-center bg-bg-base/40 flex-shrink-0">
+          <BannerSlot slotId="panel-bottom" width={300} height={60} label="사이드하단배너" />
         </div>
       </div>
 

@@ -52,6 +52,10 @@ const api = {
     return () => ipcRenderer.off('export:progress', listener);
   },
 
+  // 외부 URL 열기 (배너 클릭 등) — 사용자 기본 브라우저로
+  openExternalUrl: (url: string): Promise<boolean> =>
+    ipcRenderer.invoke('shell:openExternal', url),
+
   // 미디어 URL 변환 (file:// → framelab-media://)
   // 한글, 공백, 특수문자가 포함된 경로도 안전하게 처리
   toMediaUrl: (filePath: string) => {

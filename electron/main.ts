@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, protocol } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, protocol, shell } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promises as fs, createReadStream } from 'node:fs';
@@ -220,6 +220,17 @@ app.whenReady().then(async () => {
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
+});
+
+// ───────────────────────────────────────────────
+// IPC: 외부 URL 열기 (배너 광고 클릭 등)
+// ───────────────────────────────────────────────
+ipcMain.handle('shell:openExternal', async (_e, url: string) => {
+  // 안전 가드 — http(s)만 허용
+  if (typeof url !== 'string') return false;
+  if (!/^https?:\/\//i.test(url)) return false;
+  await shell.openExternal(url);
+  return true;
 });
 
 // ───────────────────────────────────────────────

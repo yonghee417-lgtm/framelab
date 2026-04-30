@@ -44,6 +44,7 @@ export interface FrameLabApi {
   fileExists: (filePath: string) => Promise<boolean>;
   onExportProgress: (cb: (p: ExportProgress) => void) => () => void;
   toMediaUrl: (filePath: string) => string;
+  openExternalUrl: (url: string) => Promise<boolean>;
 }
 
 declare global {
